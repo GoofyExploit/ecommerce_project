@@ -1,149 +1,303 @@
-# E-Commerce Spring Boot Application
+# 🛒 E-Commerce Spring Boot Application
 
-A complete e-commerce application with role-based access control and full CRUD operations.
+A complete e-commerce management system with role-based access control, built with Spring Boot and MySQL.
 
-## Features
+## 🌟 Features
 
-### 🔐 Role-Based Access Control
-- **Admin Role**: Full access to all CRUD operations
-- **User Role**: Limited access to shopping and personal account management
-- **Login System**: Secure authentication with username/password
-- **Registration**: New user registration with automatic USER role assignment
+### 🔐 Authentication & Authorization
+- **Login System**: Secure username/password authentication
+- **Role-Based Access**: Separate interfaces for Admin and User roles
+- **User Registration**: Create new accounts with role selection
+- **Session Management**: Persistent login sessions with logout functionality
 
-### ✅ Complete CRUD Operations
-- **Products**: Create, Read, Update, Delete (Admin only)
-- **Users**: Create, Read, Update, Delete (Admin only)
-- **Orders**: Create, Read, Update, Delete (Admin can manage all, Users can manage their own)
+### 👨‍💼 Admin Features
+- **Product Management**: Create, Read, Update, Delete products
+- **User Management**: View, Update, Delete users and their roles
+- **Order Management**: View, Update, Delete all orders
+- **Full CRUD Operations**: Complete control over all system entities
 
-### 🗄️ Database Schema
-- **products** table with id, name, category, price, stock
-- **users** table with id, username, password, role (ADMIN/USER)
-- **orders** table with id, customer_id
-- **order_items** table for order details
+### 👤 User Features
+- **Product Browsing**: View all available products
+- **Order Placement**: Create orders with multiple items
+- **Order History**: View personal order history
+- **Profile Management**: Update personal account details
 
-## Prerequisites
+### 🗄️ Database Features
+- **MySQL Integration**: Robust database connectivity
+- **Auto Schema Creation**: Automatic table creation on startup
+- **Sample Data**: Pre-loaded with test products and users
+- **Data Validation**: Input validation and error handling
 
-1. **Java 17** or higher
-2. **MySQL 8.0** or higher
-3. **Maven 3.6** or higher
+## 🚀 Quick Start
 
-## Setup Instructions
+### Prerequisites
+- **Java 17** or higher
+- **MySQL 8.0** or higher
+- **Maven 3.6** or higher
 
-### 1. Database Setup
-```sql
--- Create database
-CREATE DATABASE ecommerce;
+### Installation
 
--- The application will automatically create tables using schema.sql
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd ecommerce_springboot
+   ```
+
+2. **Configure Database**
+   ```sql
+   CREATE DATABASE ecommerce;
+   ```
+
+3. **Update Configuration**
+   Edit `src/main/resources/application.properties`:
+   ```properties
+   spring.datasource.username=your_username
+   spring.datasource.password=your_password
+   ```
+
+4. **Run the Application**
+   ```bash
+   mvn spring-boot:run
+   ```
+
+## 🎯 Usage Guide
+
+### Login Screen
+```
+=== LOGIN ===
+1. Login
+2. Register
+3. Test Database Connection
+4. Exit
 ```
 
-### 2. Configuration
-Update `src/main/resources/application.properties` with your MySQL credentials:
-```properties
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-```
-
-### 3. Run the Application
-```bash
-# Navigate to project directory
-cd ecommerce_springboot
-
-# Run the application
-mvn spring-boot:run
-```
-
-## Usage
-
-The application starts with a login screen where you can:
-
-### 🔐 Login Options
-- **1. Login** - Enter username and password
-- **2. Register** - Create new user account (automatically assigned USER role)
-- **3. Exit** - Close the application
-
-### 👨‍💼 Admin Interface (After Login as Admin)
-**Product Management:**
-- **1. Add Product** - Create new products
-- **2. View All Products** - List all products
-- **3. Update Product** - Modify existing products
-- **4. Delete Product** - Remove products
-
-**User Management:**
-- **5. View All Users** - List all users with roles
-- **6. Update User** - Modify user details and roles
-- **7. Delete User** - Remove users
-
-**Order Management:**
-- **8. View All Orders** - List all orders
-- **9. Update Order** - Modify any order
-- **10. Delete Order** - Remove any order
-
-**Account:**
-- **11. Logout** - Return to login screen
-- **12. Exit** - Close application
-
-### 👤 User Interface (After Login as User)
-**Shopping:**
-- **1. View All Products** - Browse available products
-- **2. Place Order** - Create new order (automatically uses your user ID)
-- **3. View My Orders** - See only your orders
-
-**Account:**
-- **4. Update Profile** - Modify your username/password
-- **5. Logout** - Return to login screen
-- **6. Exit** - Close application
-
-## Sample Data
-
-The application comes with sample data:
-- **Products**: Laptop, Mouse, Keyboard, Book, Pen
-- **Users**: 
-  - `admin` / `admin123` (ADMIN role)
-  - `user1` / `password123` (USER role)
-  - `user2` / `password456` (USER role)
-
-## Default Login Credentials
-
+### Default Credentials
 **Admin Access:**
 - Username: `admin`
 - Password: `admin123`
 
 **User Access:**
-- Username: `user1` or `user2`
-- Password: `password123` or `password456`
+- Username: `user1` / `user2`
+- Password: `password123` / `password456`
 
-## Technical Details
+### Admin Dashboard
+```
+=== ADMIN DASHBOARD ===
+=== PRODUCT MANAGEMENT ===
+1. Add Product
+2. View All Products
+3. Update Product
+4. Delete Product
+=== USER MANAGEMENT ===
+5. View All Users
+6. Update User
+7. Delete User
+=== ORDER MANAGEMENT ===
+8. View All Orders
+9. Update Order
+10. Delete Order
+=== ACCOUNT ===
+11. Logout
+12. Exit
+```
 
-- **Framework**: Spring Boot 3.5.5
-- **Database**: MySQL with JDBC
-- **Architecture**: DAO pattern with Service layer
-- **Dependency Injection**: Spring IoC container
+### User Dashboard
+```
+=== USER DASHBOARD ===
+=== SHOPPING ===
+1. View All Products
+2. Place Order
+3. View My Orders
+=== ACCOUNT ===
+4. Update Profile
+5. Logout
+6. Exit
+```
 
-## Troubleshooting
+## 🏗️ Project Structure
+
+```
+ecommerce_springboot/
+├── src/main/java/com/ecommerce/ecommerce_springboot/
+│   ├── EcommerceApp.java                 # Main application class
+│   ├── app/
+│   │   ├── ConsoleApp.java              # Main console interface
+│   │   ├── DatabaseTest.java            # Database testing utility
+│   │   └── DatabaseFixer.java           # Database schema fixer
+│   ├── controller/
+│   │   └── ConsoleController.java       # Legacy controller
+│   ├── dao/
+│   │   ├── ProductDAO.java              # Product data access
+│   │   ├── UserDAO.java                 # User data access
+│   │   └── OrderDAO.java                # Order data access
+│   ├── model/
+│   │   ├── Product.java                 # Product entity
+│   │   ├── User.java                    # User entity
+│   │   ├── Order.java                   # Order entity
+│   │   └── OrderItem.java               # Order item entity
+│   └── service/
+│       ├── ProductService.java          # Product business logic
+│       ├── UserService.java             # User business logic
+│       └── OrderService.java            # Order business logic
+├── src/main/resources/
+│   ├── application.properties           # Configuration
+│   ├── schema.sql                       # Database schema
+│   └── migration.sql                    # Database migration
+└── pom.xml                              # Maven dependencies
+```
+
+## 🗄️ Database Schema
+
+### Tables
+- **products**: Product catalog with id, name, category, price, stock
+- **users**: User accounts with id, username, password, role
+- **orders**: Order records with id, customer_id
+- **order_items**: Order details with id, order_id, product_id, quantity, price
+
+### Sample Data
+- **5 Products**: Laptop, Mouse, Keyboard, Book, Pen
+- **3 Users**: admin (ADMIN), user1 (USER), user2 (USER)
+
+## 🔧 Configuration
+
+### Application Properties
+```properties
+# Database Configuration
+spring.datasource.url=jdbc:mysql://localhost:3306/ecommerce
+spring.datasource.username=root
+spring.datasource.password=your_password
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# Database Initialization
+spring.sql.init.mode=always
+spring.sql.init.schema-locations=classpath:schema.sql
+spring.sql.init.continue-on-error=true
+
+# JPA Settings
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=true
+```
+
+### Maven Dependencies
+- Spring Boot Starter
+- Spring Boot JDBC
+- MySQL Connector
+- Spring Security Crypto
+- Lombok (Optional)
+
+## 🛠️ Development
+
+### Adding New Features
+1. **Models**: Add new entities in `model/` package
+2. **DAOs**: Create data access objects in `dao/` package
+3. **Services**: Implement business logic in `service/` package
+4. **Controllers**: Add new controllers in `controller/` package
+
+### Database Changes
+1. Update `schema.sql` for new tables/columns
+2. Create migration scripts in `migration.sql`
+3. Update corresponding DAO classes
+4. Test with DatabaseTest utility
+
+## 🧪 Testing
+
+### Database Connection Test
+- Use option 3 in login menu
+- Verifies database connectivity
+- Shows table status and record counts
+
+### Registration Test
+- Create new users with different roles
+- Test input validation
+- Verify role assignment
+
+### CRUD Operations Test
+- Test all Create, Read, Update, Delete operations
+- Verify admin vs user access restrictions
+- Test error handling
+
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **Database Connection Error**
-   - Ensure MySQL is running
-   - Check credentials in application.properties
-   - Verify database exists
+**Database Connection Error**
+```
+Solution: Check MySQL service, verify credentials in application.properties
+```
 
-2. **Table Not Found**
-   - Check if schema.sql is in src/main/resources/
-   - Verify spring.sql.init.mode=always in application.properties
+**Table Not Found Error**
+```
+Solution: Ensure schema.sql is in src/main/resources/
+```
 
-3. **Port Already in Use**
-   - Change server port in application.properties
-   - Kill existing Java processes
+**Registration Fails**
+```
+Solution: Use Database Test option to verify database schema
+```
 
-## CRUD Operations Verification
+**Login Issues**
+```
+Solution: Verify username/password, check user exists in database
+```
 
-To test CRUD operations:
+### Debug Tools
+- **Database Test**: Option 3 in login menu
+- **Error Logs**: Check console output for detailed error messages
+- **Stack Traces**: Enabled for debugging registration issues
 
-1. **Create**: Add new products/users/orders
-2. **Read**: View all items and individual items by ID
-3. **Update**: Modify existing items
-4. **Delete**: Remove items with confirmation
+## 📋 API Reference
 
-All operations include proper error handling and user feedback.
+### User Management
+- `addUser(User user)` - Create new user
+- `getUserById(int id)` - Get user by ID
+- `getUserByUsername(String username)` - Get user by username
+- `updateUser(User user)` - Update user details
+- `deleteUser(int id)` - Delete user
+
+### Product Management
+- `addProduct(Product product)` - Create new product
+- `getAllProducts()` - Get all products
+- `getProductById(int id)` - Get product by ID
+- `updateProduct(Product product)` - Update product
+- `deleteProduct(int id)` - Delete product
+
+### Order Management
+- `addOrder(Order order)` - Create new order
+- `getAllOrders()` - Get all orders
+- `getOrderById(int id)` - Get order by ID
+- `updateOrder(Order order)` - Update order
+- `deleteOrder(int id)` - Delete order
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 👥 Authors
+
+- **Your Name** - *Initial work* - [YourGitHub](https://github.com/yourusername)
+
+## 🙏 Acknowledgments
+
+- Spring Boot team for the excellent framework
+- MySQL team for the robust database
+- Open source community for inspiration
+
+---
+
+## 📞 Support
+
+If you encounter any issues or have questions:
+1. Check the troubleshooting section
+2. Use the built-in database test tools
+3. Review the error logs
+4. Create an issue in the repository
+
+**Happy Coding! 🚀**
