@@ -282,7 +282,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👥 Authors
 
-- **Lucky** - *Initial work* - [YourGitHub](https://github.com/GoofyExploit)
+- **Lucky** - *Initial work* - [GitHub](https://github.com/GoofyExploit)
 
 ## 🙏 Acknowledgments
 
