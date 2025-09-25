@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Scanner;
+import java.util.UUID;
 
 @Component
 public class ConsoleApp {
@@ -22,8 +23,7 @@ public class ConsoleApp {
     private final Scanner scanner = new Scanner(System.in);
     private User currentUser = null;
     
-    @Autowired
-    private DatabaseTest databaseTest;
+
 
     public ConsoleApp(ProductService productService, UserService userService, OrderService orderService) {
         this.productService = productService;
@@ -43,6 +43,7 @@ public class ConsoleApp {
                 System.out.println("2. Register");
                 System.out.println("3. Test Database Connection");
                 System.out.println("4. Exit");
+            
                 System.out.print("Enter your choice: ");
                 
                 int choice = scanner.nextInt();
@@ -52,7 +53,7 @@ public class ConsoleApp {
                     case 1 -> login();
                     case 2 -> register();
                     case 3 -> {
-                        databaseTest.testDatabaseConnection();
+                        System.out.println("Database test is not available in this version.");
                     }
                     case 4 -> {
                         System.out.println("Goodbye!");
@@ -81,8 +82,8 @@ public class ConsoleApp {
         String password = scanner.nextLine();
         
         try {
-            User user = userService.getUserByUsername(username);
-            if (user != null && user.getPassword().equals(password)) {
+            User user = userService.authenticate(username, password);
+            if (user != null) {
                 currentUser = user;
                 System.out.println("✅ Login successful! Welcome, " + user.getUsername() + " (" + user.getRole() + ")");
             } else {
@@ -131,14 +132,14 @@ public class ConsoleApp {
         
         try {
             // Check if user already exists
-            User existingUser = userService.getUserByUsername(username.trim());
+            List<User> users = userService.getAllUsers();
+            User existingUser = users.stream().filter(u -> u.getUsername().equals(username.trim())).findFirst().orElse(null);
             if (existingUser != null) {
                 System.out.println("❌ Username already exists!");
                 return;
             }
-            
-            // Create new user
-            User newUser = new User(0, username.trim(), password, role);
+            // Create new user with random UUID as id
+            User newUser = new User(UUID.randomUUID().toString(), username.trim(), password, role);
             userService.addUser(newUser);
             System.out.println("✅ Registration successful! Role: " + role + ". Please login.");
             
@@ -243,8 +244,8 @@ public class ConsoleApp {
         System.out.print("Enter stock: ");
         int stock = scanner.nextInt();
 
-        Product product = new Product(0, name, category, price, stock);
-        productService.addProduct(product);
+    Product product = new Product(UUID.randomUUID().toString(), name, category, price, stock);
+    productService.addProduct(product);
 
         System.out.println("✅ Product added successfully!");
     }
@@ -259,14 +260,19 @@ public class ConsoleApp {
 
     // User-specific methods
     private void viewMyOrders() {
-        List<Order> orders = orderService.getAllOrders();
+        // Resolve orders by current user's id via order-service endpoint
+        List<Order> orders = orderService.getOrdersByCustomerId(currentUser.getId());
         System.out.println("\n--- My Orders ---");
         for (Order o : orders) {
-            if (o.getCustomerId() == currentUser.getId()) {
-                System.out.println("Order ID: " + o.getId() + " | Customer ID: " + o.getCustomerId());
-                for (OrderItem item : o.getItems()) {
-                    System.out.println("   -> Product ID: " + item.getProductId() + " | Qty: " + item.getQuantity());
+            for (OrderItem item : o.getItems()) {
+                String productName = "(unknown)";
+                try {
+                    Product product = productService.getProductById(item.getProductId());
+                    if (product != null) productName = product.getName();
+                } catch (Exception e) {
+                    // ignore, show unknown
                 }
+                System.out.println("Order ID: " + o.getId() + " | Product: " + productName + " | Qty: " + item.getQuantity());
             }
         }
     }
@@ -282,7 +288,7 @@ public class ConsoleApp {
         String password = scanner.nextLine();
         if (!password.isEmpty()) currentUser.setPassword(password);
         
-        userService.updateUser(currentUser);
+    userService.updateUser(currentUser.getId(), currentUser);
         System.out.println("✅ Profile updated successfully!");
     }
 
@@ -291,19 +297,41 @@ public class ConsoleApp {
         order.setCustomerId(currentUser.getId());
 
         while (true) {
-            System.out.print("Enter product ID (or 0 to finish): ");
-            int productId = scanner.nextInt();
-            if (productId == 0) break;
+            System.out.println("Add product by:");
+            System.out.println("1. Product ID");
+            System.out.println("2. Product Name");
+            System.out.print("Enter choice (1 or 2, or 0 to finish): ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // consume newline
+            if (choice == 0) break;
+
+            String productId = null;
+            if (choice == 1) {
+                System.out.print("Enter product ID: ");
+                productId = scanner.nextLine();
+            } else if (choice == 2) {
+                System.out.print("Enter product name: ");
+                String productName = scanner.nextLine();
+                Product product = productService.getProductByName(productName);
+                if (product == null) {
+                    System.out.println("❌ Product not found with name: " + productName);
+                    continue;
+                }
+                productId = product.getId();
+            } else {
+                System.out.println("Invalid choice.");
+                continue;
+            }
 
             System.out.print("Enter quantity: ");
             int qty = scanner.nextInt();
+            scanner.nextLine(); // consume newline
 
-            OrderItem item = new OrderItem(0, productId, qty);
+            OrderItem item = new OrderItem(UUID.randomUUID().toString(), productId, qty);
             order.getItems().add(item);
         }
 
         orderService.addOrder(order);
-
         System.out.println("✅ Order placed successfully!");
     }
 
@@ -320,31 +348,51 @@ public class ConsoleApp {
 
     // Product CRUD operations
     private void updateProduct() {
-        System.out.print("Enter product ID to update: ");
-        int id = scanner.nextInt();
+        System.out.println("Update product by:");
+        System.out.println("1. Product ID");
+        System.out.println("2. Product Name");
+        System.out.print("Enter choice (1 or 2): ");
+        int choice = scanner.nextInt();
         scanner.nextLine();
-        
+        String id = null;
+        try {
+            if (choice == 1) {
+                System.out.print("Enter product ID to update: ");
+                id = scanner.nextLine();
+            } else if (choice == 2) {
+                System.out.print("Enter product name to update: ");
+                String name = scanner.nextLine();
+                Product p = productService.getProductByName(name);
+                if (p == null) {
+                    System.out.println("❌ Product not found with name: " + name);
+                    return;
+                }
+                id = p.getId();
+            } else {
+                System.out.println("Invalid choice.");
+                return;
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Error finding product: " + e.getMessage());
+            return;
+        }
         try {
             Product product = productService.getProductById(id);
             System.out.println("Current product: " + product);
-            
             System.out.print("Enter new name (or press Enter to keep current): ");
             String name = scanner.nextLine();
             if (!name.isEmpty()) product.setName(name);
-            
             System.out.print("Enter new category (or press Enter to keep current): ");
             String category = scanner.nextLine();
             if (!category.isEmpty()) product.setCategory(category);
-            
             System.out.print("Enter new price (or 0 to keep current): ");
             double price = scanner.nextDouble();
             if (price > 0) product.setPrice(price);
-            
             System.out.print("Enter new stock (or -1 to keep current): ");
             int stock = scanner.nextInt();
             if (stock >= 0) product.setStock(stock);
-            
-            productService.updateProduct(product);
+            scanner.nextLine();
+            productService.updateProduct(id, product);
             System.out.println("✅ Product updated successfully!");
         } catch (Exception e) {
             System.out.println("❌ Error updating product: " + e.getMessage());
@@ -352,21 +400,45 @@ public class ConsoleApp {
     }
 
     private void deleteProduct() {
-        System.out.print("Enter product ID to delete: ");
-        int id = scanner.nextInt();
+        System.out.println("Delete product by:");
+        System.out.println("1. Product ID");
+        System.out.println("2. Product Name");
+        System.out.print("Enter choice (1 or 2): ");
+        int choice = scanner.nextInt();
         scanner.nextLine();
-        
         try {
-            Product product = productService.getProductById(id);
-            System.out.println("Product to delete: " + product);
-            System.out.print("Are you sure? (y/n): ");
-            String confirm = scanner.nextLine();
-            
-            if (confirm.equalsIgnoreCase("y")) {
-                productService.deleteProduct(id);
-                System.out.println("✅ Product deleted successfully!");
+            if (choice == 1) {
+                System.out.print("Enter product ID to delete: ");
+                String id = scanner.nextLine();
+                Product product = productService.getProductById(id);
+                System.out.println("Product to delete: " + product);
+                System.out.print("Are you sure? (y/n): ");
+                String confirm = scanner.nextLine();
+                if (confirm.equalsIgnoreCase("y")) {
+                    productService.deleteProduct(id);
+                    System.out.println("✅ Product deleted successfully!");
+                } else {
+                    System.out.println("❌ Deletion cancelled.");
+                }
+            } else if (choice == 2) {
+                System.out.print("Enter product name to delete: ");
+                String name = scanner.nextLine();
+                Product product = productService.getProductByName(name);
+                if (product == null) {
+                    System.out.println("❌ Product not found with name: " + name);
+                    return;
+                }
+                System.out.println("Product to delete: " + product);
+                System.out.print("Are you sure? (y/n): ");
+                String confirm = scanner.nextLine();
+                if (confirm.equalsIgnoreCase("y")) {
+                    productService.deleteProductByName(name);
+                    System.out.println("✅ Product deleted successfully!");
+                } else {
+                    System.out.println("❌ Deletion cancelled.");
+                }
             } else {
-                System.out.println("❌ Deletion cancelled.");
+                System.out.println("Invalid choice.");
             }
         } catch (Exception e) {
             System.out.println("❌ Error deleting product: " + e.getMessage());
@@ -383,27 +455,47 @@ public class ConsoleApp {
     }
 
     private void updateUser() {
-        System.out.print("Enter user ID to update: ");
-        int id = scanner.nextInt();
+        System.out.println("Update user by:");
+        System.out.println("1. User ID");
+        System.out.println("2. Username");
+        System.out.print("Enter choice (1 or 2): ");
+        int choice = scanner.nextInt();
         scanner.nextLine();
-        
+        String id = null;
+        try {
+            if (choice == 1) {
+                System.out.print("Enter user ID to update: ");
+                id = scanner.nextLine();
+            } else if (choice == 2) {
+                System.out.print("Enter username to update: ");
+                String username = scanner.nextLine();
+                User u = userService.getUserByUsername(username);
+                if (u == null) {
+                    System.out.println("❌ User not found with username: " + username);
+                    return;
+                }
+                id = u.getId();
+            } else {
+                System.out.println("Invalid choice.");
+                return;
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Error finding user: " + e.getMessage());
+            return;
+        }
         try {
             User user = userService.getUserById(id);
             System.out.println("Current user: " + user);
-            
             System.out.print("Enter new username (or press Enter to keep current): ");
             String username = scanner.nextLine();
             if (!username.isEmpty()) user.setUsername(username);
-            
             System.out.print("Enter new password (or press Enter to keep current): ");
             String password = scanner.nextLine();
             if (!password.isEmpty()) user.setPassword(password);
-            
             System.out.print("Enter new role (ADMIN/USER or press Enter to keep current): ");
             String role = scanner.nextLine();
             if (!role.isEmpty()) user.setRole(role.toUpperCase());
-            
-            userService.updateUser(user);
+            userService.updateUser(id, user);
             System.out.println("✅ User updated successfully!");
         } catch (Exception e) {
             System.out.println("❌ Error updating user: " + e.getMessage());
@@ -411,21 +503,45 @@ public class ConsoleApp {
     }
 
     private void deleteUser() {
-        System.out.print("Enter user ID to delete: ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-        
+        System.out.println("Delete user by:");
+        System.out.println("1. User ID");
+        System.out.println("2. Username");
+        System.out.print("Enter choice (1 or 2): ");
+        int choice = scanner.nextInt();
+        scanner.nextLine(); // consume newline
         try {
-            User user = userService.getUserById(id);
-            System.out.println("User to delete: " + user);
-            System.out.print("Are you sure? (y/n): ");
-            String confirm = scanner.nextLine();
-            
-            if (confirm.equalsIgnoreCase("y")) {
-                userService.deleteUser(id);
-                System.out.println("✅ User deleted successfully!");
+            if (choice == 1) {
+                System.out.print("Enter user ID to delete: ");
+                String id = scanner.nextLine();
+                User user = userService.getUserById(id);
+                System.out.println("User to delete: " + user);
+                System.out.print("Are you sure? (y/n): ");
+                String confirm = scanner.nextLine();
+                if (confirm.equalsIgnoreCase("y")) {
+                    userService.deleteUser(id);
+                    System.out.println("✅ User deleted successfully!");
+                } else {
+                    System.out.println("❌ Deletion cancelled.");
+                }
+            } else if (choice == 2) {
+                System.out.print("Enter username to delete: ");
+                String username = scanner.nextLine();
+                User u = userService.getUserByUsername(username);
+                if (u == null) {
+                    System.out.println("❌ User not found with username: " + username);
+                    return;
+                }
+                System.out.println("User to delete: " + u);
+                System.out.print("Are you sure? (y/n): ");
+                String confirm = scanner.nextLine();
+                if (confirm.equalsIgnoreCase("y")) {
+                    userService.deleteUserByUsername(username);
+                    System.out.println("✅ User deleted successfully!");
+                } else {
+                    System.out.println("❌ Deletion cancelled.");
+                }
             } else {
-                System.out.println("❌ Deletion cancelled.");
+                System.out.println("Invalid choice.");
             }
         } catch (Exception e) {
             System.out.println("❌ Error deleting user: " + e.getMessage());
@@ -435,18 +551,21 @@ public class ConsoleApp {
     // Order CRUD operations
     private void updateOrder() {
         System.out.print("Enter order ID to update: ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-        
+        String id = scanner.nextLine();
         try {
             Order order = orderService.getOrderById(id);
             System.out.println("Current order: " + order);
-            
-            System.out.print("Enter new customer ID (or 0 to keep current): ");
-            int customerId = scanner.nextInt();
-            if (customerId > 0) order.setCustomerId(customerId);
-            
-            orderService.updateOrder(order);
+            System.out.print("Enter new customer username (or leave blank to keep current): ");
+            String customerUsername = scanner.nextLine();
+            if (!customerUsername.isEmpty()) {
+                User u = userService.getUserByUsername(customerUsername);
+                if (u == null) {
+                    System.out.println("❌ User not found with username: " + customerUsername);
+                    return;
+                }
+                order.setCustomerId(u.getId());
+            }
+            orderService.updateOrder(id, order);
             System.out.println("✅ Order updated successfully!");
         } catch (Exception e) {
             System.out.println("❌ Error updating order: " + e.getMessage());
@@ -455,15 +574,12 @@ public class ConsoleApp {
 
     private void deleteOrder() {
         System.out.print("Enter order ID to delete: ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-        
+        String id = scanner.nextLine();
         try {
             Order order = orderService.getOrderById(id);
             System.out.println("Order to delete: " + order);
             System.out.print("Are you sure? (y/n): ");
             String confirm = scanner.nextLine();
-            
             if (confirm.equalsIgnoreCase("y")) {
                 orderService.deleteOrder(id);
                 System.out.println("✅ Order deleted successfully!");

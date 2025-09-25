@@ -1,22 +1,23 @@
-package com.ecommerce.ecommerce_springboot.model;
+package com.ecommerce.order.model;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.ArrayList;
 import java.util.List;
 
+@Document(collection = "orders")
 public class Order {
+    @Id
     private String id;
     private String customerId;
-    private List<OrderItem> items;
+    private List<OrderItem> items = new ArrayList<>();
 
-    public Order() {
-        this.items = new ArrayList<>();
-    }
+    public Order() {}
 
-
-    public Order(String id, String customerId) {
+    public Order(String id, String customerId, List<OrderItem> items) {
         this.id = id;
         this.customerId = customerId;
-        this.items = new ArrayList<>();
+        this.items = items;
     }
 
     public String getId() { return id; }
@@ -27,13 +28,4 @@ public class Order {
 
     public List<OrderItem> getItems() { return items; }
     public void setItems(List<OrderItem> items) { this.items = items; }
-
-    @Override
-    public String toString() {
-        return "Order { " +
-                "id=" + id +
-                ", customerId=" + customerId +
-                ", items=" + items +
-                " }";
-    }
 }
