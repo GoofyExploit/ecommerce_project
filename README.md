@@ -301,3 +301,96 @@ If you encounter any issues or have questions:
 4. Create an issue in the repository
 
 **Happy Coding! 🚀**
+
+## 🌐 Frontend Application
+
+A modern React frontend has been added to provide a web-based interface for the e-commerce application.
+
+### Frontend Features
+- 🛍️ **Product Catalog**: Browse and search products with a modern UI
+- 🛒 **Shopping Cart**: Add/remove items, update quantities with real-time updates
+- 👤 **User Authentication**: Login and registration with form validation
+- 📦 **Order Management**: View order history and place new orders
+- 📱 **Responsive Design**: Works perfectly on desktop, tablet, and mobile
+- 🎨 **Modern UI**: Clean, intuitive interface with smooth animations
+
+### Quick Start Frontend
+
+**Option 1: Using Batch Files (Recommended)**
+```bash
+# Start all backend services (no console prompts)
+start-backend.bat
+
+# Start frontend
+start-frontend.bat
+
+# Add sample data (optional)
+add-sample-data.bat
+```
+
+**Option 2: Manual Start**
+1. **Start Backend Services** (in separate terminals):
+   ```bash
+   # Terminal 1 - Product Service
+   cd ecommerce-microservices/product-service
+   mvn spring-boot:run
+   
+   # Terminal 2 - User Service  
+   cd ecommerce-microservices/user-service
+   mvn spring-boot:run
+   
+   # Terminal 3 - Order Service
+   cd ecommerce-microservices/order-service
+   mvn spring-boot:run
+   ```
+
+2. **Start Frontend**:
+   ```bash
+   cd ecommerce-frontend
+   npm install
+   npm run dev
+   ```
+
+3. **Access the Application**:
+   - Frontend: http://localhost:3000
+   - Product API: http://localhost:8081
+   - User API: http://localhost:8082
+   - Order API: http://localhost:8083
+
+### 🔧 No More Console Prompts!
+
+The backend services now run **without console prompts** by default. The web frontend provides the complete user interface. If you need the old console interface, you can still access it by running the main application with the `--console` flag:
+
+```bash
+# Only if you want the old console interface
+java -jar target/ecommerce_springboot-0.0.1-SNAPSHOT.jar --console
+```
+
+### Frontend Tech Stack
+- **React 18** with TypeScript for type safety
+- **Vite** for fast development and building
+- **React Router** for client-side navigation
+- **Axios** for API communication
+- **Custom Hooks** for state management
+- **CSS3** with modern responsive design
+
+### Project Structure
+```
+ecommerce-frontend/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── pages/         # Page components (Home, Products, Cart, etc.)
+│   ├── hooks/         # Custom React hooks (useAuth, useCart)
+│   ├── services/      # API service layer
+│   ├── types/         # TypeScript type definitions
+│   └── App.tsx        # Main application component
+├── public/            # Static assets
+└── package.json       # Dependencies and scripts
+```
+
+### Available Scripts
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+
+For detailed frontend documentation, see `ecommerce-frontend/README.md`.

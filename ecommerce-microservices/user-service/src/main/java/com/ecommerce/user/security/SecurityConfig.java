@@ -21,11 +21,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/users", "/users/by-username/**", "/users/auth/**").permitAll()
-            .anyRequest().authenticated()
-        )
-                .httpBasic(Customizer.withDefaults());
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()
+                )
+                .cors(Customizer.withDefaults());
         return http.build();
     }
 

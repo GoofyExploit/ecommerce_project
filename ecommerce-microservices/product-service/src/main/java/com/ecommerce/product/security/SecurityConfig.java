@@ -21,13 +21,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-        .authorizeHttpRequests(auth -> auth
-            // Allow public GET access to products endpoints
-            .requestMatchers("GET", "/products/**").permitAll()
-            .requestMatchers("/products", "/products/by-name/**").permitAll()
-            .anyRequest().authenticated()
-        )
-                .httpBasic(Customizer.withDefaults());
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()
+                );
         return http.build();
     }
 
